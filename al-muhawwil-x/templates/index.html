@@ -1,237 +1,229 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المحول X - استخراج صوت فائق السرعة</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #030307;
-            --card-bg: rgba(11, 11, 20, 0.6);
-            --accent-color: #7c3aed;
-            --accent-glow: rgba(124, 58, 237, 0.5);
-            --text-main: #ffffff;
-            --text-muted: #64748b;
-            --border-color: rgba(255, 255, 255, 0.05);
-            --border-focus: rgba(124, 58, 237, 0.4);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المحول X - Audio Extraction Engine</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { font-family: 'Inter', system-ui, sans-serif; }
+body { background: #030307; }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Cairo', sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            position: relative;
-            overflow-hidden;
-        }
-
-        /* ✨ عودة تأثير الـ GLOW الخرافي في الخلفية ✨ */
-        body::before {
-            content: "";
-            position: absolute;
-            width: 450px;
-            height: 450px;
-            background: radial-gradient(circle, var(--accent-glow) 0%, rgba(0,0,0,0) 70%);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: -1;
-            pointer-events: none;
-            filter: blur(40px);
-            opacity: 0.8;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 540px;
-            padding: 24px;
-            box-sizing: border-box;
-            text-align: center;
-            z-index: 1;
-        }
-
-        .logo {
-            font-size: 76px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #c084fc, var(--accent-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 5px;
-            filter: drop-shadow(0 0 20px rgba(124, 58, 237, 0.3));
-        }
-
-        .title {
-            font-size: 34px;
-            font-weight: 800;
-            margin: 0 0 8px 0;
-            letter-spacing: -0.5px;
-        }
-
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin-bottom: 35px;
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            font-weight: 600;
-        }
-
-        /* الكارت الاحترافي شبه الشفاف بأسلوب Glassmorphism */
-        .main-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-color);
-            border-radius: 28px;
-            padding: 35px 28px;
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.05);
-            transition: border 0.3s ease;
-        }
-
-        .main-card:hover {
-            border-color: rgba(124, 58, 237, 0.2);
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 18px 24px;
-            background: rgba(5, 5, 10, 0.8);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            color: var(--text-main);
-            font-size: 15px;
-            box-sizing: border-box;
-            outline: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-align: left;
-        }
-
-        input[type="text"]:focus {
-            border-color: var(--border-focus);
-            background: #000000;
-            box-shadow: 0 0 25px rgba(124, 58, 237, 0.15);
-        }
-
-        .btn-extract {
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, var(--accent-color), #6d28d9);
-            border: none;
-            border-radius: 16px;
-            color: white;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 22px;
-            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
-        }
-
-        .btn-extract:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(124, 58, 237, 0.5);
-        }
-
-        .btn-extract:active {
-            transform: translateY(1px);
-        }
-
-        /* صندوق الانتظار والمحاكاة الأنيق */
-        .process-box {
-            display: none;
-            margin-top: 30px;
-            background: rgba(124, 58, 237, 0.04);
-            border: 1px dashed rgba(124, 58, 237, 0.3);
-            border-radius: 20px;
-            padding: 28px;
-            animation: fadeIn 0.4s ease;
-        }
-
-        .status-text {
-            font-size: 15px;
-            color: #a78bfa;
-            font-weight: 600;
-        }
-
-        .spinner {
-            width: 34px;
-            height: 34px;
-            border: 3px solid rgba(124, 58, 237, 0.1);
-            border-top: 3px solid var(--accent-color);
-            border-radius: 50%;
-            margin: 0 auto 18px auto;
-            animation: spin 0.8s linear infinite;
-        }
-
-        /* شبكة الإحصائيات الفخمة في الأسفل */
-        .stats-grid {
-            display: flex;
-            gap: 16px;
-            margin-top: 35px;
-            width: 100%;
-        }
-
-        .stat-card {
-            flex: 1;
-            background: rgba(11, 11, 20, 0.4);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 18px;
-            transition: all 0.3s;
-        }
-
-        .stat-card:hover {
-            background: rgba(11, 11, 20, 0.6);
-            border-color: rgba(255,255,255,0.08);
-        }
-
-        .stat-val { font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; }
-        .stat-lbl { font-size: 12px; color: #64748b; margin-top: 6px; font-weight: 600; }
-
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
+body::before {
+    content: "";
+    position: fixed;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(124,58,237,0.35) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    pointer-events: none;
+    filter: blur(50px);
+    opacity: 0.85;
+}
+.glow { box-shadow: 0 0 40px rgba(99,102,241,0.15), 0 0 80px rgba(99,102,241,0.05); }
+.x-letter {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.speed-line {
+    position: absolute;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(99,102,241,0.5), transparent);
+    animation: speedLine 1.5s linear infinite;
+}
+@keyframes speedLine {
+    0% { transform: translateX(-100%); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateX(100vw); opacity: 0; }
+}
+.spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgba(99,102,241,0.15);
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.btn-glow {
+    box-shadow: 0 0 30px rgba(34,197,94,0.25), 0 0 60px rgba(34,197,94,0.1);
+}
+.feature-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.03);
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.03);
+}
+</style>
 </head>
-<body>
-
-<div class="container">
-    <div class="logo">X</div>
-    <h1 class="title">المحول X</h1>
-    <div class="subtitle">
-        <span>Auto-Delete 🕒</span>
-        <span>•</span>
-        <span>Zero-Trace 🔒</span>
-        <span>•</span>
-        <span>Xtreme Speed ⚡</span>
+<body class="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+    <div class="fixed inset-0 pointer-events-none">
+        <div class="speed-line" style="top: 15%; animation-delay: 0s;"></div>
+        <div class="speed-line" style="top: 30%; animation-delay: 0.4s;"></div>
+        <div class="speed-line" style="top: 55%; animation-delay: 0.8s;"></div>
+        <div class="speed-line" style="top: 70%; animation-delay: 1.2s;"></div>
+        <div class="speed-line" style="top: 85%; animation-delay: 1.6s;"></div>
     </div>
 
-    <div class="main-card">
-        <input type="text" id="youtubeUrl" placeholder="ضع رابط اليوتيوب هنا...">
-        <button class="btn-extract" onclick="extractAudio()">استخراج الصوت</button>
+    <div class="fixed inset-0 pointer-events-none">
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
+    </div>
 
-        <div id="processBox" class="process-box">
-            <div class="spinner"></div>
-            <div id="statusText" class="status-text">جاري فحص المقطع وتخطي حماية يوتيوب...</div>
+    <main class="relative z-10 w-full max-w-2xl px-6 py-12">
+        <div class="text-center mb-12">
+            <div class="inline-flex items-center justify-center mb-6">
+                <span class="text-7xl font-black x-letter tracking-tighter">X</span>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-bold text-white/90 tracking-tight">
+                المحول <span class="x-letter">X</span>
+            </h1>
+            <p class="text-white/40 text-sm md:text-base mt-3 font-light">
+                محرك استخراج صوتي فائق السرعة · <span class="text-indigo-400/60">Zero-Trace</span>
+            </p>
+            <div class="flex items-center justify-center gap-4 mt-4 text-[11px] text-white/25">
+                <span class="feature-item">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 4px #7c3aed)">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    </svg>
+                    Xtreme Speed
+                </span>
+                <span class="w-px h-3 bg-white/10"></span>
+                <span class="feature-item">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 4px #7c3aed)">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    Zero-Trace
+                </span>
+                <span class="w-px h-3 bg-white/10"></span>
+                <span class="feature-item">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 4px #7c3aed)">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Auto-Delete
+                </span>
+            </div>
         </div>
-    </div>
 
-    <div class="stats-grid">
-        <div class="stat-card"><div class="stat-val">>5s</div><div class="stat-lbl">متوسط الاستخراج</div></div>
-        <div class="stat-card"><div class="stat-val">∞</div><div class="stat-lbl">بدون حدود تحميل</div></div>
-        <div class="stat-card"><div class="stat-val">0</div><div class="stat-lbl">سجلات تامة</div></div>
-    </div>
-</div>
+        <div id="card" class="relative bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 md:p-8 glow backdrop-blur-xl">
+            <form id="extractForm" class="space-y-5">
+                <div class="relative">
+                    <input
+                        id="urlInput"
+                        type="url"
+                        dir="ltr"
+                        placeholder="Paste YouTube URL here..."
+                        class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-5 py-4 text-white/80 text-sm placeholder-white/20 outline-none transition-all duration-300 focus:border-indigo-500/40 focus:bg-white/[0.06] focus:ring-1 focus:ring-indigo-500/20"
+                        required
+                    >
+                </div>
 
-<script>
-    function extractAudio() {
-        const urlInput = document.getElementById('youtubeUrl').value.trim();
-        if (!urlInput) {
-            alert("
+                <button
+                    id="extractBtn"
+                    type="submit"
+                    class="relative w-full py-4 rounded-xl font-semibold text-sm text-white overflow-hidden transition-all duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
+                >
+                    <span id="btnText" class="relative z-10 flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        استخراج الصوت
+                    </span>
+                </button>
+            </form>
+
+            <div id="errorBox" class="hidden mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400/80 text-sm text-center"></div>
+
+            <div id="processBox" class="hidden mt-6 p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] text-center" style="box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
+                <div class="flex items-center justify-center gap-4 mb-4">
+                    <div id="processSpinner" class="spinner"></div>
+                    <p id="processStatus" class="text-white/60 text-sm font-light">جاري فحص الرابط وتخطي قيود يوتيوب...</p>
+                </div>
+
+                <p id="processSub" class="hidden text-white/30 text-[11px] mt-2">سيتم التوجيه تلقائياً خلال 3 ثوانٍ...</p>
+            </div>
+        </div>
+
+        <div class="mt-10 grid grid-cols-3 gap-3 text-center">
+            <div class="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                <div class="text-indigo-400/50 text-lg font-bold">&lt;5s</div>
+                <div class="text-white/20 text-[10px] mt-0.5">متوسط وقت الاستخراج</div>
+            </div>
+            <div class="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                <div class="text-indigo-400/50 text-lg font-bold">∞</div>
+                <div class="text-white/20 text-[10px] mt-0.5">بدون حدود للتحميل</div>
+            </div>
+            <div class="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                <div class="text-indigo-400/50 text-lg font-bold">0</div>
+                <div class="text-white/20 text-[10px] mt-0.5">سجلات · خصوصية تامة</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    const form = document.getElementById('extractForm');
+    const urlInput = document.getElementById('urlInput');
+    const errorBox = document.getElementById('errorBox');
+    const processBox = document.getElementById('processBox');
+    const processSpinner = document.getElementById('processSpinner');
+    const processStatus = document.getElementById('processStatus');
+    const processSub = document.getElementById('processSub');
+    const extractBtn = document.getElementById('extractBtn');
+
+    let redirectTimer = null;
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        errorBox.classList.add('hidden');
+
+        const url = urlInput.value.trim();
+        if (!url || !/(youtube\.com|youtu\.be)/i.test(url)) {
+            errorBox.textContent = 'الرجاء إدخال رابط YouTube صحيح';
+            errorBox.classList.remove('hidden');
+            return;
+        }
+
+        extractBtn.disabled = true;
+        extractBtn.classList.add('opacity-50');
+
+        processStatus.className = 'text-white/60 text-sm font-light';
+        processStatus.textContent = 'جاري فحص المقطع وتخطي حماية يوتيوب...';
+        processSpinner.style.display = '';
+        processSub.classList.add('hidden');
+        processBox.classList.remove('hidden');
+
+        setTimeout(() => {
+            processStatus.textContent = 'جاري تشفير الصوت بأعلى جودة MP3 (320kbps)...';
+            processSub.classList.remove('hidden');
+        }, 1500);
+
+        redirectTimer = setTimeout(() => {
+            processSpinner.style.display = 'none';
+            processStatus.textContent = 'تم بنجاح ✓';
+            processStatus.className = 'text-emerald-400 text-sm font-medium';
+            processSub.classList.add('hidden');
+
+            window.open(
+                `https://loader.to/api/card/?url=${encodeURIComponent(url)}&f=mp3`,
+                '_blank'
+            );
+
+            setTimeout(() => {
+                processBox.classList.add('hidden');
+                extractBtn.disabled = false;
+                extractBtn.classList.remove('opacity-50');
+            }, 800);
+        }, 3500);
+    });
+    </script>
+</body>
+</html>
