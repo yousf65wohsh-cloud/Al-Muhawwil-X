@@ -61,11 +61,11 @@ def extract_audio(url: str):
     output_path = str(TEMP_DIR / f"%(id)s_{file_id}.%(ext)s")
 
     ydl_opts = {
-        "format": "ba/ba*/b/best",
+        "format": "ba/b/best",
         "cookiefile": "cookies.txt",
         "noplaylist": True,
-        "playlist_items": "1",
-        "ignoreerrors": True,
+        "extract_flat": False,
+        "skip_download": False,
         "prefer_ffmpeg": True,
         "postprocessors": [
             {
@@ -79,16 +79,20 @@ def extract_audio(url: str):
         "no_warnings": True,
     }
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info_dict = ydl.extract_info(url, download=True)
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(url, download=True)
 
-    if info_dict is None:
-        raise Exception("لم يتم العثور على بيانات الفيديو")
+        if info_dict is None:
+            raise Exception("فشل يوتيوب في الاستجابة، يرجى تحديث ملف cookies.txt")
 
-    if "entries" in info_dict:
-        video_data = info_dict["entries"][0]
-    else:
-        video_data = info_dict
+        if "entries" in info_dict:
+            video_data = info_dict["entries"][0]
+        else:
+            video_data = info_dict
+
+    except Exception as e:
+        raise Exception(f"خطأ أثناء المعالجة: {str(e)}")
 
     video_id = video_data.get("id", "unknown")
     title = video_data.get("title", "audio")
