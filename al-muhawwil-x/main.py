@@ -61,10 +61,11 @@ def extract_audio(url: str):
     output_path = str(TEMP_DIR / f"%(id)s_{file_id}.%(ext)s")
 
     ydl_opts = {
-        "format": "ba/ba*/b/best",
+        "format": "bestaudio/best",
         "cookiefile": "cookies.txt",
         "noplaylist": True,
-        "ignoreerrors": True,
+        "playlist_items": "1",
+        "ignoreerrors": False,
         "prefer_ffmpeg": True,
         "postprocessors": [
             {
@@ -76,13 +77,21 @@ def extract_audio(url: str):
         "outtmpl": output_path,
         "quiet": True,
         "no_warnings": True,
-        "extract_flat": False,
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        video_id = info.get("id", "unknown")
-        title = info.get("title", "audio")
+        info_dict = ydl.extract_info(url, download=True)
+
+    if info_dict is None:
+        raise Exception("لم يتم العثور على بيانات الفيديو")
+
+    if "entries" in info_dict:
+        video_data = info_dict["entries"][0]
+    else:
+        video_data = info_dict
+
+    video_id = video_data.get("id", "unknown")
+    title = video_data.get("title", "audio")
 
     candidates = list(TEMP_DIR.glob(f"{video_id}_{file_id}.*"))
     if not candidates:
