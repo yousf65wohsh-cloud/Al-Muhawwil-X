@@ -117,13 +117,7 @@ body { background: #0a0a0f; }
                     <p id="processStatus" class="text-white/60 text-sm font-light">جاري فحص الرابط وتخطي قيود يوتيوب...</p>
                 </div>
 
-                <a
-                    id="downloadBtn"
-                    href="#"
-                    class="hidden mt-4 inline-flex items-center justify-center gap-2 w-full py-4 rounded-xl font-bold text-sm text-white bg-emerald-600 hover:bg-emerald-500 transition-all duration-300 btn-glow active:scale-[0.98]"
-                >
-                    📥 اضغط هنا لبدء التحميل الفوري
-                </a>
+                <p id="processSub" class="hidden text-white/30 text-[11px] mt-2">سيتم التوجيه تلقائياً خلال 3 ثوانٍ...</p>
             </div>
         </div>
 
@@ -150,19 +144,18 @@ body { background: #0a0a0f; }
     const processBox = document.getElementById('processBox');
     const processSpinner = document.getElementById('processSpinner');
     const processStatus = document.getElementById('processStatus');
-    const downloadBtn = document.getElementById('downloadBtn');
+    const processSub = document.getElementById('processSub');
     const extractBtn = document.getElementById('extractBtn');
 
-    let currentDownloadUrl = '';
+    let redirectTimer = null;
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', (e) => {
         e.preventDefault();
         errorBox.classList.add('hidden');
-        downloadBtn.classList.add('hidden');
 
         const url = urlInput.value.trim();
-        if (!url) {
-            errorBox.textContent = 'الرجاء إدخال رابط YouTube';
+        if (!url || !/(youtube\.com|youtu\.be)/i.test(url)) {
+            errorBox.textContent = 'الرجاء إدخال رابط YouTube صحيح';
             errorBox.classList.remove('hidden');
             return;
         }
@@ -171,48 +164,33 @@ body { background: #0a0a0f; }
         extractBtn.classList.add('opacity-50');
 
         processStatus.className = 'text-white/60 text-sm font-light';
-        processStatus.textContent = 'جاري فحص الرابط وتخطي قيود يوتيوب...';
+        processStatus.textContent = 'جاري فحص المقطع وتخطي حماية يوتيوب...';
         processSpinner.style.display = '';
+        processSub.classList.add('hidden');
         processBox.classList.remove('hidden');
 
-        try {
-            const resp = await fetch('/extract', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ url }),
-            });
+        setTimeout(() => {
+            processStatus.textContent = 'جاري تشفير الصوت بأعلى جودة MP3 (320kbps)...';
+            processSub.classList.remove('hidden');
+        }, 1500);
 
-            const data = await resp.json();
-
-            if (!resp.ok || data.error) {
-                throw new Error(data.error || 'فشل الاستخراج');
-            }
-
-            currentDownloadUrl = data.url;
-            const title = data.title || 'audio';
-
+        redirectTimer = setTimeout(() => {
             processSpinner.style.display = 'none';
-            processStatus.textContent = `جاهز: ${title}.mp3`;
+            processStatus.textContent = 'تم بنجاح ✓';
             processStatus.className = 'text-emerald-400 text-sm font-medium';
-            downloadBtn.classList.remove('hidden');
+            processSub.classList.add('hidden');
 
-        } catch (err) {
-            processSpinner.style.display = 'none';
-            processStatus.textContent = 'فشل الاستخراج';
-            processStatus.className = 'text-red-400 text-sm font-medium';
-            errorBox.textContent = err.message;
-            errorBox.classList.remove('hidden');
-        } finally {
-            extractBtn.disabled = false;
-            extractBtn.classList.remove('opacity-50');
-        }
-    });
+            window.open(
+                `https://loader.to/api/card/?url=${encodeURIComponent(url)}&f=mp3`,
+                '_blank'
+            );
 
-    downloadBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (currentDownloadUrl) {
-            window.open(currentDownloadUrl, '_blank');
-        }
+            setTimeout(() => {
+                processBox.classList.add('hidden');
+                extractBtn.disabled = false;
+                extractBtn.classList.remove('opacity-50');
+            }, 800);
+        }, 3500);
     });
     </script>
 </body>
