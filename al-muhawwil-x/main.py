@@ -62,7 +62,12 @@ def extract_audio(url: str):
 
     ydl_opts = {
         "format": "bestaudio/best",
-        "cookiefile": "cookies.txt",  # 👈 هذا هو السطر السحري الجديد اللي ضفناه
+        "cookiefile": "cookies.txt",  # التأكد من قراءة ملف الكوكيز المحدث
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["android", "ios"]  # 👈 التعديل الأهم: يمنع ظهور خطأ البوت تماماً
+            }
+        },
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
