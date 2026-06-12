@@ -62,8 +62,8 @@ def extract_audio(url: str):
 
     ydl_opts = {
         "format": "bestaudio/best",
-        "ffmpeg_location": "/usr/bin/ffmpeg",
         "noplaylist": True,
+        "cookiefile": "cookies.txt",
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
