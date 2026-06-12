@@ -61,11 +61,11 @@ def extract_audio(url: str):
     output_path = str(TEMP_DIR / f"%(id)s_{file_id}.%(ext)s")
 
     ydl_opts = {
-        "format": "bestaudio/best",
+        "format": "ba/ba*/b/best",
         "cookiefile": "cookies.txt",
         "noplaylist": True,
         "playlist_items": "1",
-        "ignoreerrors": False,
+        "ignoreerrors": True,
         "prefer_ffmpeg": True,
         "postprocessors": [
             {
