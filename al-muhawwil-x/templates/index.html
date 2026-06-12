@@ -146,56 +146,22 @@ input:-webkit-autofill:focus {
     <script>
     const form = document.getElementById('extractForm');
     const urlInput = document.getElementById('urlInput');
-    const extractBtn = document.getElementById('extractBtn');
-    const btnText = document.getElementById('btnText');
-    const btnLoader = document.getElementById('btnLoader');
     const errorBox = document.getElementById('errorBox');
     const card = document.getElementById('card');
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', (e) => {
         e.preventDefault();
         errorBox.classList.add('hidden');
 
         const url = urlInput.value.trim();
         if (!url) {
-            showError('الرجاء إدخال رابط YouTube');
+            errorBox.textContent = 'الرجاء إدخال رابط YouTube';
+            errorBox.classList.remove('hidden');
             return;
         }
 
-        extractBtn.disabled = true;
-        btnText.classList.add('opacity-0');
-        btnLoader.classList.remove('hidden');
-
-        try {
-            await extractAudio(url);
-        } catch (err) {
-            showError(err.message);
-        } finally {
-            extractBtn.disabled = false;
-            btnText.classList.remove('opacity-0');
-            btnLoader.classList.add('hidden');
-        }
+        window.open(`https://loader.to/api/card/?url=${encodeURIComponent(url)}&f=mp3`, '_blank');
     });
-
-    async function extractAudio(youtubeUrl) {
-        const apiUrl = `https://api.vewd.top/download?url=${encodeURIComponent(youtubeUrl)}&format=mp3`;
-
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-
-        if (data && data.download_url) {
-            window.open(data.download_url, '_blank');
-        } else {
-            const backupUrl = `https://loader.to/api/card/?url=${encodeURIComponent(youtubeUrl)}&f=mp3`;
-            window.open(backupUrl, '_blank');
-        }
-    }
-
-    function showError(msg) {
-        errorBox.textContent = msg;
-        errorBox.classList.remove('hidden');
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
     </script>
 </body>
 </html>
