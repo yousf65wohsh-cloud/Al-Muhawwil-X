@@ -53,11 +53,15 @@ cleanup_thread.start()
 
 
 def extract_audio(youtube_url: str) -> tuple[str, str]:
+    clean_url = youtube_url.split("&")[0] if "watch?v=" in youtube_url else youtube_url
+
     payload = {
-        "url": youtube_url,
+        "url": clean_url,
+        "videoQuality": "720",
         "downloadMode": "audio",
         "audioFormat": "mp3",
-        "audioBitrate": "192",
+        "audioBitrate": "320",
+        "filenamePattern": "classic",
     }
 
     resp = requests.post(
