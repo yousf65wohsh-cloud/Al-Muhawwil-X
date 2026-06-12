@@ -155,9 +155,10 @@ body { background: #0a0a0f; }
 
     let currentDownloadUrl = '';
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
         errorBox.classList.add('hidden');
+        downloadBtn.classList.add('hidden');
 
         const url = urlInput.value.trim();
         if (!url) {
@@ -166,29 +167,45 @@ body { background: #0a0a0f; }
             return;
         }
 
-        currentDownloadUrl = `https://loader.to/api/card/?url=${encodeURIComponent(url)}&f=mp3`;
-
         extractBtn.disabled = true;
         extractBtn.classList.add('opacity-50');
 
-        downloadBtn.classList.add('hidden');
         processStatus.className = 'text-white/60 text-sm font-light';
         processStatus.textContent = 'جاري فحص الرابط وتخطي قيود يوتيوب...';
         processSpinner.style.display = '';
         processBox.classList.remove('hidden');
 
-        setTimeout(() => {
-            processStatus.textContent = 'جاري تحويل مقطع الفيديو إلى هندسة MP3 بأعلى جودة (320kbps)...';
-        }, 1500);
+        try {
+            const resp = await fetch('/extract', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ url }),
+            });
 
-        setTimeout(() => {
+            const data = await resp.json();
+
+            if (!resp.ok || data.error) {
+                throw new Error(data.error || 'فشل الاستخراج');
+            }
+
+            currentDownloadUrl = data.url;
+            const title = data.title || 'audio';
+
             processSpinner.style.display = 'none';
-            processStatus.textContent = 'جاهز للتحميل التلقائي الفوري!';
+            processStatus.textContent = `جاهز: ${title}.mp3`;
             processStatus.className = 'text-emerald-400 text-sm font-medium';
             downloadBtn.classList.remove('hidden');
+
+        } catch (err) {
+            processSpinner.style.display = 'none';
+            processStatus.textContent = 'فشل الاستخراج';
+            processStatus.className = 'text-red-400 text-sm font-medium';
+            errorBox.textContent = err.message;
+            errorBox.classList.remove('hidden');
+        } finally {
             extractBtn.disabled = false;
             extractBtn.classList.remove('opacity-50');
-        }, 3500);
+        }
     });
 
     downloadBtn.addEventListener('click', (e) => {
