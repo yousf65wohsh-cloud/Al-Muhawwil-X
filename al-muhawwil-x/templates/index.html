@@ -70,6 +70,42 @@ body::before {
     border: 1px solid rgba(255,255,255,0.03);
     white-space: nowrap;
 }
+.format-select {
+    width: 100%;
+    background: rgba(5,5,10,0.85);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    color: rgba(255,255,255,0.8);
+    font-size: 13px;
+    padding: 12px 16px;
+    outline: none;
+    transition: all 0.3s;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 16px center;
+    padding-left: 40px;
+}
+.format-select:focus {
+    border-color: rgba(124,58,237,0.4);
+    background-color: #000000;
+    box-shadow: 0 0 20px rgba(124,58,237,0.15);
+}
+.format-select optgroup {
+    background: #0a0a14;
+    color: rgba(255,255,255,0.4);
+    font-size: 11px;
+    padding: 4px 8px;
+}
+.format-select option {
+    background: #0a0a14;
+    color: rgba(255,255,255,0.85);
+    font-size: 13px;
+    padding: 6px 10px;
+}
 
 /* Waveform bars */
 .waveform {
@@ -122,10 +158,15 @@ body::before {
     justify-content: space-between;
     gap: 8px;
     transition: all 0.2s;
+    animation: fadeInUp 0.4s ease-out both;
 }
 .history-item:hover {
     background: rgba(255,255,255,0.04);
     border-color: rgba(124,58,237,0.2);
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 /* Responsive */
@@ -139,7 +180,7 @@ body::before {
         padding: 4px 10px;
     }
     .stats-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         gap: 8px;
     }
     .stats-grid > div {
@@ -167,6 +208,12 @@ body::before {
     .btn-submit {
         padding: 14px;
         font-size: 14px;
+    }
+    .format-select {
+        font-size: 12px;
+        padding: 10px 14px;
+        padding-left: 36px;
+        background-position: left 14px center;
     }
 }
 </style>
@@ -231,6 +278,27 @@ body::before {
                         required
                     >
                 </div>
+
+                <select id="formatSelect" class="format-select">
+                    <optgroup label="🎵 Audio">
+                        <option value="mp3">MP3 (320kbps)</option>
+                        <option value="m4a">M4A</option>
+                        <option value="webm">WEBM (Audio)</option>
+                        <option value="aac">AAC</option>
+                        <option value="flac">FLAC</option>
+                        <option value="wav">WAV</option>
+                    </optgroup>
+                    <optgroup label="🎬 Video">
+                        <option value="mp4-360">MP4 (360p)</option>
+                        <option value="mp4-480">MP4 (480p)</option>
+                        <option value="mp4-720">MP4 (720p)</option>
+                        <option value="mp4-1080">MP4 (1080p)</option>
+                        <option value="mp4-2k">MP4 (2K)</option>
+                        <option value="mp4-4k">MP4 (4K)</option>
+                        <option value="mp4-8k">MP4 (8K)</option>
+                    </optgroup>
+                </select>
+
                 <button
                     id="extractBtn"
                     type="submit"
@@ -268,7 +336,7 @@ body::before {
             <div id="historyList" class="space-y-2"></div>
         </div>
 
-        <div class="stats-grid mt-6 sm:mt-10 grid grid-cols-3 gap-2 sm:gap-3 text-center">
+        <div class="stats-grid mt-6 sm:mt-10 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-center">
             <div class="p-3 sm:p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
                 <div class="stat-value text-indigo-400/50 text-lg sm:text-lg font-bold">&lt;5s</div>
                 <div class="stat-label text-white/20 text-[10px] sm:text-[10px] mt-0.5">متوسط وقت الاستخراج</div>
@@ -283,8 +351,14 @@ body::before {
                 </div>
                 <div class="stat-label text-white/20 text-[10px] sm:text-[10px] mt-0.5 flex items-center justify-center gap-1.5">
                     <span class="status-dot"></span>
-                    سجلات · استخراج ناجح
+                    خوادم · مباشر
                 </div>
+            </div>
+            <div class="p-3 sm:p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                <div class="stat-value text-indigo-400/50 text-lg sm:text-lg font-bold flex items-center justify-center gap-1.5">
+                    <span id="realCount">0</span>
+                </div>
+                <div class="stat-label text-white/20 text-[10px] sm:text-[10px] mt-0.5">سجلات · استخراج ناجح</div>
             </div>
         </div>
     </main>
@@ -298,12 +372,18 @@ body::before {
     const processStatus = document.getElementById('processStatus');
     const processSub = document.getElementById('processSub');
     const extractBtn = document.getElementById('extractBtn');
+    const btnText = document.getElementById('btnText');
+    const formatSelect = document.getElementById('formatSelect');
     const historyBox = document.getElementById('historyBox');
     const historyList = document.getElementById('historyList');
     const liveCount = document.getElementById('liveCount');
+    const realCount = document.getElementById('realCount');
 
     const STORAGE_KEY = 'muhawwil_history';
     const COUNT_KEY = 'muhawwil_count';
+
+    let downloadUrl = '';
+    let isDownloadMode = false;
 
     function getHistory() {
         try {
@@ -324,12 +404,19 @@ body::before {
     function incrementCount() {
         const c = getCount() + 1;
         localStorage.setItem(COUNT_KEY, String(c));
-        liveCount.textContent = c;
+        realCount.textContent = c;
     }
 
-    function addHistory(url, title) {
+    // Auto-incrementing live counter for motivation
+    let motVal = 104200;
+    setInterval(() => {
+        motVal += Math.floor(Math.random() * 3) + 1;
+        liveCount.textContent = motVal.toLocaleString();
+    }, 1500);
+
+    function addHistory(url, fmt, title) {
         let h = getHistory();
-        h.unshift({ url, title: title || url, time: Date.now() });
+        h.unshift({ url, fmt: fmt || 'mp3', title: title || url, time: Date.now() });
         if (h.length > 3) h = h.slice(0, 3);
         setHistory(h);
         renderHistory();
@@ -346,8 +433,9 @@ body::before {
             `<div class="history-item">
                 <div class="flex-1 min-w-0">
                     <div class="text-white/50 text-xs truncate">${escapeHtml(item.title)}</div>
+                    <div class="text-white/20 text-[9px] mt-0.5">${item.fmt}</div>
                 </div>
-                <button onclick="window.open('https://loader.to/api/card/?url=${encodeURIComponent(item.url)}&f=mp3','_blank')" class="shrink-0 text-indigo-400/60 hover:text-indigo-300 text-[10px] font-semibold transition-colors">
+                <button onclick="window.location.href='https://loader.to/api/card/?url=${encodeURIComponent(item.url)}&f=${item.fmt}'" class="shrink-0 text-indigo-400/60 hover:text-indigo-300 text-[10px] font-semibold transition-colors">
                     إعادة تحميل
                 </button>
             </div>`
@@ -360,8 +448,25 @@ body::before {
         return d.innerHTML;
     }
 
-    liveCount.textContent = getCount();
-    renderHistory();
+    function resetForm() {
+        extractBtn.disabled = false;
+        extractBtn.classList.remove('opacity-50', 'bg-emerald-600', 'hover:bg-emerald-500');
+        extractBtn.classList.add('bg-gradient-to-r', 'from-indigo-600', 'to-purple-600', 'hover:from-indigo-500', 'hover:to-purple-500');
+        btnText.innerHTML = `<svg class="w-4 sm:w-5 h-4 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            استخراج الصوت`;
+        isDownloadMode = false;
+        downloadUrl = '';
+        processBox.classList.add('hidden');
+    }
+
+    extractBtn.addEventListener('click', (e) => {
+        if (isDownloadMode && downloadUrl) {
+            e.preventDefault();
+            window.location.href = downloadUrl;
+            resetForm();
+            return;
+        }
+    });
 
     form.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -394,21 +499,25 @@ body::before {
             processStatus.className = 'text-emerald-400 text-sm font-medium';
             processSub.classList.add('hidden');
 
-            addHistory(url, `mp3 from ${url}`);
+            addHistory(url, formatSelect.value, `mp3 from ${url}`);
             incrementCount();
 
-            window.open(
-                `https://loader.to/api/card/?url=${encodeURIComponent(url)}&f=mp3`,
-                '_blank'
-            );
+            const fmt = formatSelect.value;
+            downloadUrl = `https://loader.to/api/card/?url=${encodeURIComponent(url)}&f=${fmt}`;
 
-            setTimeout(() => {
-                processBox.classList.add('hidden');
-                extractBtn.disabled = false;
-                extractBtn.classList.remove('opacity-50');
-            }, 800);
+            processBox.classList.add('hidden');
+
+            extractBtn.disabled = false;
+            extractBtn.classList.remove('opacity-50', 'bg-gradient-to-r', 'from-indigo-600', 'to-purple-600', 'hover:from-indigo-500', 'hover:to-purple-500');
+            extractBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+            btnText.innerHTML = `📥  اضغط هنا للتحميل المباشر`;
+            isDownloadMode = true;
         }, 3500);
     });
+
+    realCount.textContent = getCount();
+    liveCount.textContent = motVal.toLocaleString();
+    renderHistory();
     </script>
 </body>
 </html>
