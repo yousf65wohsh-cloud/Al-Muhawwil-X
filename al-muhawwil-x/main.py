@@ -62,6 +62,7 @@ def extract_audio(url: str):
 
     ydl_opts = {
         "format": "bestaudio/best",
+        "cookiefile": "cookies.txt",  # 👈 هذا هو السطر السحري الجديد اللي ضفناه
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
