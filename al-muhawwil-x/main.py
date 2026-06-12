@@ -61,7 +61,7 @@ def extract_audio(url: str):
     output_path = str(TEMP_DIR / f"%(id)s_{file_id}.%(ext)s")
 
     ydl_opts = {
-        "format": "bestaudio/best",
+        "format": "bestaudio/bestaudio*/best",
         "noplaylist": True,
         "cookiefile": "cookies.txt",
         "postprocessors": [
