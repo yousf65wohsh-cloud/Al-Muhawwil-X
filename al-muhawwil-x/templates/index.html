@@ -125,6 +125,10 @@ input:-webkit-autofill:focus {
             </form>
 
             <div id="errorBox" class="hidden mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400/80 text-sm text-center"></div>
+
+            <div id="downloadContainer" style="display: none; margin-top: 20px; width: 100%; max-width: 620px; border-radius: 16px; overflow: hidden; border: 1px solid #2d2d3d; background: #0b0b14; padding: 10px;">
+                <iframe id="downloadFrame" src="" width="100%" height="250px" style="border: none; border-radius: 12px;"></iframe>
+            </div>
         </div>
 
         <div class="mt-10 grid grid-cols-3 gap-3 text-center">
@@ -147,7 +151,8 @@ input:-webkit-autofill:focus {
     const form = document.getElementById('extractForm');
     const urlInput = document.getElementById('urlInput');
     const errorBox = document.getElementById('errorBox');
-    const card = document.getElementById('card');
+    const downloadFrame = document.getElementById('downloadFrame');
+    const downloadContainer = document.getElementById('downloadContainer');
 
     form.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -157,10 +162,12 @@ input:-webkit-autofill:focus {
         if (!url) {
             errorBox.textContent = 'الرجاء إدخال رابط YouTube';
             errorBox.classList.remove('hidden');
+            downloadContainer.style.display = 'none';
             return;
         }
 
-        window.open(`https://loader.to/api/card/?url=${encodeURIComponent(url)}&f=mp3`, '_blank');
+        downloadFrame.src = `https://loader.to/api/card/?url=${encodeURIComponent(url)}&f=mp3`;
+        downloadContainer.style.display = 'block';
     });
     </script>
 </body>
