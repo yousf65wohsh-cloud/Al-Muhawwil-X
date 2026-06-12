@@ -4,16 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>المحول X - استخراج صوت فائق السرعة</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #050508;
-            --card-bg: #0b0b14;
+            --bg-color: #030307;
+            --card-bg: rgba(11, 11, 20, 0.6);
             --accent-color: #7c3aed;
-            --accent-hover: #6d28d9;
+            --accent-glow: rgba(124, 58, 237, 0.5);
             --text-main: #ffffff;
-            --text-muted: #94a3b8;
-            --border-color: #1e1e2f;
+            --text-muted: #64748b;
+            --border-color: rgba(255, 255, 255, 0.05);
+            --border-focus: rgba(124, 58, 237, 0.4);
         }
 
         body {
@@ -26,128 +27,177 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            position: relative;
+            overflow-hidden;
+        }
+
+        /* ✨ عودة تأثير الـ GLOW الخرافي في الخلفية ✨ */
+        body::before {
+            content: "";
+            position: absolute;
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, rgba(0,0,0,0) 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            filter: blur(40px);
+            opacity: 0.8;
         }
 
         .container {
             width: 100%;
-            max-width: 580px;
-            padding: 20px;
+            max-width: 540px;
+            padding: 24px;
             box-sizing: border-box;
             text-align: center;
+            z-index: 1;
         }
 
         .logo {
-            font-size: 72px;
+            font-size: 76px;
             font-weight: 800;
-            background: linear-gradient(135deg, #a78bfa, var(--accent-color));
+            background: linear-gradient(135deg, #c084fc, var(--accent-color));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            filter: drop-shadow(0 0 20px rgba(124, 58, 237, 0.3));
         }
 
         .title {
-            font-size: 32px;
-            font-weight: 700;
-            margin: 0 0 10px 0;
+            font-size: 34px;
+            font-weight: 800;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.5px;
         }
 
         .subtitle {
             color: var(--text-muted);
-            font-size: 16px;
-            margin-bottom: 30px;
+            font-size: 14px;
+            margin-bottom: 35px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            font-weight: 600;
         }
 
+        /* الكارت الاحترافي شبه الشفاف بأسلوب Glassmorphism */
         .main-card {
             background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 30px 24px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-radius: 28px;
+            padding: 35px 28px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+            transition: border 0.3s ease;
+        }
+
+        .main-card:hover {
+            border-color: rgba(124, 58, 237, 0.2);
         }
 
         input[type="text"] {
             width: 100%;
-            padding: 16px 20px;
-            background: #121220;
+            padding: 18px 24px;
+            background: rgba(5, 5, 10, 0.8);
             border: 1px solid var(--border-color);
-            border-radius: 14px;
+            border-radius: 16px;
             color: var(--text-main);
             font-size: 15px;
             box-sizing: border-box;
             outline: none;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             text-align: left;
         }
 
         input[type="text"]:focus {
-            border-color: var(--accent-color);
+            border-color: var(--border-focus);
+            background: #000000;
+            box-shadow: 0 0 25px rgba(124, 58, 237, 0.15);
         }
 
         .btn-extract {
             width: 100%;
-            padding: 16px;
-            background: var(--accent-color);
+            padding: 18px;
+            background: linear-gradient(135deg, var(--accent-color), #6d28d9);
             border: none;
-            border-radius: 14px;
+            border-radius: 16px;
             color: white;
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s ease;
-            margin-top: 20px;
+            transition: all 0.3s ease;
+            margin-top: 22px;
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
         }
 
         .btn-extract:hover {
-            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(124, 58, 237, 0.5);
         }
 
-        /* صندوق الانتظار الذكي */
+        .btn-extract:active {
+            transform: translateY(1px);
+        }
+
+        /* صندوق الانتظار والمحاكاة الأنيق */
         .process-box {
             display: none;
-            margin-top: 25px;
-            background: #121222;
-            border: 1px dashed #3b3b54;
-            border-radius: 16px;
-            padding: 24px;
+            margin-top: 30px;
+            background: rgba(124, 58, 237, 0.04);
+            border: 1px dashed rgba(124, 58, 237, 0.3);
+            border-radius: 20px;
+            padding: 28px;
+            animation: fadeIn 0.4s ease;
         }
 
         .status-text {
             font-size: 15px;
-            color: var(--text-muted);
+            color: #a78bfa;
+            font-weight: 600;
         }
 
         .spinner {
-            width: 30px;
-            height: 30px;
+            width: 34px;
+            height: 34px;
             border: 3px solid rgba(124, 58, 237, 0.1);
             border-top: 3px solid var(--accent-color);
             border-radius: 50%;
-            margin: 0 auto 15px auto;
+            margin: 0 auto 18px auto;
             animation: spin 0.8s linear infinite;
         }
 
+        /* شبكة الإحصائيات الفخمة في الأسفل */
         .stats-grid {
             display: flex;
-            gap: 15px;
-            margin-top: 30px;
+            gap: 16px;
+            margin-top: 35px;
             width: 100%;
         }
 
         .stat-card {
             flex: 1;
-            background: var(--card-bg);
+            background: rgba(11, 11, 20, 0.4);
+            backdrop-filter: blur(8px);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 15px;
+            border-radius: 20px;
+            padding: 18px;
+            transition: all 0.3s;
         }
 
-        .stat-val { font-size: 20px; font-weight: 700; color: #ffffff; }
-        .stat-lbl { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .stat-card:hover {
+            background: rgba(11, 11, 20, 0.6);
+            border-color: rgba(255,255,255,0.08);
         }
+
+        .stat-val { font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; }
+        .stat-lbl { font-size: 12px; color: #64748b; margin-top: 6px; font-weight: 600; }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -155,7 +205,13 @@
 <div class="container">
     <div class="logo">X</div>
     <h1 class="title">المحول X</h1>
-    <p class="subtitle">محرك استخراج صوتي فائق السرعة • Zero-Trace</p>
+    <div class="subtitle">
+        <span>Auto-Delete 🕒</span>
+        <span>•</span>
+        <span>Zero-Trace 🔒</span>
+        <span>•</span>
+        <span>Xtreme Speed ⚡</span>
+    </div>
 
     <div class="main-card">
         <input type="text" id="youtubeUrl" placeholder="ضع رابط اليوتيوب هنا...">
@@ -168,9 +224,9 @@
     </div>
 
     <div class="stats-grid">
-        <div class="stat-card"><div class="stat-val">>5s</div><div class="stat-lbl">متوسط وقت الاستخراج</div></div>
-        <div class="stat-card"><div class="stat-val">∞</div><div class="stat-lbl">بدون حدود للتحميل</div></div>
-        <div class="stat-card"><div class="stat-val">0</div><div class="stat-lbl">سجلات • خصوصية تامة</div></div>
+        <div class="stat-card"><div class="stat-val">>5s</div><div class="stat-lbl">متوسط الاستخراج</div></div>
+        <div class="stat-card"><div class="stat-val">∞</div><div class="stat-lbl">بدون حدود تحميل</div></div>
+        <div class="stat-card"><div class="stat-val">0</div><div class="stat-lbl">سجلات تامة</div></div>
     </div>
 </div>
 
@@ -178,29 +234,4 @@
     function extractAudio() {
         const urlInput = document.getElementById('youtubeUrl').value.trim();
         if (!urlInput) {
-            alert("الرجاء إدخال رابط يوتيوب أولاً!");
-            return;
-        }
-
-        const pBox = document.getElementById('processBox');
-        const statusText = document.getElementById('statusText');
-
-        pBox.style.display = 'block';
-        statusText.innerText = "جاري فحص المقطع وتخطي حماية يوتيوب...";
-
-        // تغيير النص بعد ثانية ونصف لإعطاء هيبة للتصميم
-        setTimeout(() => {
-            statusText.innerText = "جاري تشفير الصوت بأعلى جودة MP3 (320kbps)...";
-        }, 1500);
-
-        // التوجيه التلقائي المباشر بعد 3.5 ثانية إلى التبويب المستقر
-        setTimeout(() => {
-            pBox.style.display = 'none';
-            const downloadUrl = `https://loader.to/api/card/?url=${encodeURIComponent(urlInput)}&f=mp3`;
-            window.open(downloadUrl, '_blank');
-        }, 3500);
-    }
-</script>
-
-</body>
-</html>
+            alert("
