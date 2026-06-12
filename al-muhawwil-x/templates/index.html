@@ -125,31 +125,6 @@ input:-webkit-autofill:focus {
             </form>
 
             <div id="errorBox" class="hidden mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400/80 text-sm text-center"></div>
-
-            <div id="resultBox" class="hidden mt-6 pt-6 border-t border-white/[0.06]">
-                <div class="text-center mb-5">
-                    <div class="inline-flex items-center gap-2 text-white/60 text-xs mb-3">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        الملف جاهز للتحميل
-                    </div>
-                    <p id="fileName" class="text-white/70 text-sm font-medium truncate max-w-full px-4"></p>
-                </div>
-
-                <a
-                    id="downloadLink"
-                    href="#"
-                    download
-                    class="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl font-semibold text-sm text-white bg-white/[0.06] border border-white/[0.08] hover:bg-white/[0.10] transition-all duration-300 active:scale-[0.98]"
-                >
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    تحميل الملف
-                </a>
-
-                <div class="mt-4 flex items-center justify-center gap-2 text-white/25 text-xs">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span>سيتم حذف الملف تلقائياً بعد <span id="countdown" class="countdown-number text-indigo-400/60 font-medium">30</span> ثانية</span>
-                </div>
-            </div>
         </div>
 
         <div class="mt-10 grid grid-cols-3 gap-3 text-center">
@@ -175,19 +150,11 @@ input:-webkit-autofill:focus {
     const btnText = document.getElementById('btnText');
     const btnLoader = document.getElementById('btnLoader');
     const errorBox = document.getElementById('errorBox');
-    const resultBox = document.getElementById('resultBox');
-    const downloadLink = document.getElementById('downloadLink');
-    const fileName = document.getElementById('fileName');
-    const countdown = document.getElementById('countdown');
     const card = document.getElementById('card');
-
-    let countdownInterval = null;
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         errorBox.classList.add('hidden');
-        resultBox.classList.add('hidden');
-        if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
 
         const url = urlInput.value.trim();
         if (!url) {
@@ -200,40 +167,7 @@ input:-webkit-autofill:focus {
         btnLoader.classList.remove('hidden');
 
         try {
-            const response = await fetch('/extract', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ url })
-            });
-
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.error || 'فشل الاستخراج');
-            }
-
-            const data = await response.json();
-
-            if (data.error) {
-                throw new Error(data.error);
-            }
-
-            const downloadUrl = data.url;
-            const name = data.title ? data.title + '.mp3' : 'audio.mp3';
-
-            fileName.textContent = name;
-
-            downloadLink.onclick = (e) => {
-                e.preventDefault();
-                window.open(downloadUrl, '_blank');
-            };
-
-            resultBox.classList.remove('hidden');
-            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-            startCountdown(30, () => {
-                resultBox.classList.add('hidden');
-            });
-
+            await extractAudio(url);
         } catch (err) {
             showError(err.message);
         } finally {
@@ -243,24 +177,24 @@ input:-webkit-autofill:focus {
         }
     });
 
+    async function extractAudio(youtubeUrl) {
+        const apiUrl = `https://api.vewd.top/download?url=${encodeURIComponent(youtubeUrl)}&format=mp3`;
+
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        if (data && data.download_url) {
+            window.open(data.download_url, '_blank');
+        } else {
+            const backupUrl = `https://loader.to/api/card/?url=${encodeURIComponent(youtubeUrl)}&f=mp3`;
+            window.open(backupUrl, '_blank');
+        }
+    }
+
     function showError(msg) {
         errorBox.textContent = msg;
         errorBox.classList.remove('hidden');
         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-    function startCountdown(seconds, onDone) {
-        countdown.textContent = seconds;
-        if (countdownInterval) clearInterval(countdownInterval);
-        countdownInterval = setInterval(() => {
-            seconds--;
-            countdown.textContent = seconds;
-            if (seconds <= 0) {
-                clearInterval(countdownInterval);
-                countdownInterval = null;
-                onDone();
-            }
-        }, 1000);
     }
     </script>
 </body>
