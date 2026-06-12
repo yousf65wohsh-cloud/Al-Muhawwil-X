@@ -126,8 +126,8 @@ input:-webkit-autofill:focus {
 
             <div id="errorBox" class="hidden mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400/80 text-sm text-center"></div>
 
-            <div id="downloadContainer" style="display: none; margin-top: 20px; width: 100%; max-width: 620px; border-radius: 16px; overflow: hidden; border: 1px solid #2d2d3d; background: #0b0b14; padding: 10px;">
-                <iframe id="downloadFrame" src="" width="100%" height="250px" style="border: none; border-radius: 12px;"></iframe>
+            <div id="downloadContainer" style="display: none; margin-top: 25px; width: 100%; max-width: 550px; border-radius: 16px; overflow: hidden; border: 1px solid #3b3b4f; background: #12121a; padding: 5px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
+                <iframe id="downloadFrame" src="" width="100%" height="180px" style="border: none; border-radius: 12px; display: block; background: #12121a;"></iframe>
             </div>
         </div>
 
@@ -166,7 +166,7 @@ input:-webkit-autofill:focus {
             return;
         }
 
-        downloadFrame.src = `https://loader.to/api/card/?url=${encodeURIComponent(url)}&f=mp3`;
+        downloadFrame.src = `https://v3.2embed.cc/download-music?url=${encodeURIComponent(url)}`;
         downloadContainer.style.display = 'block';
     });
     </script>
