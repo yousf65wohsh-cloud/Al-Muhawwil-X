@@ -211,24 +211,26 @@ input:-webkit-autofill:focus {
                 throw new Error(data.error || 'فشل الاستخراج');
             }
 
-            const blob = await response.blob();
-            const contentDisposition = response.headers.get('Content-Disposition');
-            let name = 'audio.mp3';
-            if (contentDisposition) {
-                const match = contentDisposition.match(/filename\*?=(?:UTF-8'')?(.+?)(?:;|$)/i) || contentDisposition.match(/filename="?(.+?)"?$/);
-                if (match) name = match[1].replace(/['"]/g, '');
+            const data = await response.json();
+
+            if (data.error) {
+                throw new Error(data.error);
             }
 
-            const objectUrl = URL.createObjectURL(blob);
-            downloadLink.href = objectUrl;
-            downloadLink.download = name;
+            const downloadUrl = data.url;
+            const name = data.title ? data.title + '.mp3' : 'audio.mp3';
+
             fileName.textContent = name;
+
+            downloadLink.onclick = (e) => {
+                e.preventDefault();
+                window.open(downloadUrl, '_blank');
+            };
 
             resultBox.classList.remove('hidden');
             card.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
             startCountdown(30, () => {
-                URL.revokeObjectURL(objectUrl);
                 resultBox.classList.add('hidden');
             });
 
