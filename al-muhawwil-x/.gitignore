@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables
+.env
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Project specific folders
+temp/*
+!temp/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
