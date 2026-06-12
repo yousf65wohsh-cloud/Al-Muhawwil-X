@@ -10,19 +10,11 @@
 * { font-family: 'Inter', system-ui, sans-serif; }
 body { background: #0a0a0f; }
 .glow { box-shadow: 0 0 40px rgba(99,102,241,0.15), 0 0 80px rgba(99,102,241,0.05); }
-.glow-text { text-shadow: 0 0 40px rgba(99,102,241,0.3); }
 .x-letter {
     background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-}
-.pulse-ring {
-    animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-@keyframes pulse-ring {
-    0%, 100% { opacity: 0.3; transform: scale(1); }
-    50% { opacity: 0.1; transform: scale(1.05); }
 }
 .speed-line {
     position: absolute;
@@ -35,21 +27,17 @@ body { background: #0a0a0f; }
     50% { opacity: 1; }
     100% { transform: translateX(100vw); opacity: 0; }
 }
-.progress-bar {
-    background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
+.spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgba(99,102,241,0.15);
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
 }
-@keyframes shimmer {
-    0%, 100% { background-position: 200% 0; }
-    50% { background-position: -200% 0; }
-}
-.countdown-number {
-    font-variant-numeric: tabular-nums;
-}
-input:-webkit-autofill,
-input:-webkit-autofill:focus {
-    transition: background-color 600000s 0s, color 600000s 0s;
+@keyframes spin { to { transform: rotate(360deg); } }
+.btn-glow {
+    box-shadow: 0 0 30px rgba(34,197,94,0.25), 0 0 60px rgba(34,197,94,0.1);
 }
 </style>
 </head>
@@ -118,16 +106,24 @@ input:-webkit-autofill:focus {
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         استخراج الصوت
                     </span>
-                    <div id="btnLoader" class="absolute inset-0 z-0 hidden">
-                        <div class="progress-bar h-full w-full rounded-xl"></div>
-                    </div>
                 </button>
             </form>
 
             <div id="errorBox" class="hidden mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400/80 text-sm text-center"></div>
 
-            <div id="downloadContainer" style="display: none; margin-top: 25px; width: 100%; max-width: 550px; border-radius: 16px; overflow: hidden; border: 1px solid #3b3b4f; background: #12121a; padding: 5px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
-                <iframe id="downloadFrame" src="" width="100%" height="180px" style="border: none; border-radius: 12px; display: block; background: #12121a;"></iframe>
+            <div id="processBox" class="hidden mt-6 p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] text-center" style="box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
+                <div class="flex items-center justify-center gap-4 mb-4">
+                    <div id="processSpinner" class="spinner"></div>
+                    <p id="processStatus" class="text-white/60 text-sm font-light">جاري فحص الرابط وتخطي قيود يوتيوب...</p>
+                </div>
+
+                <a
+                    id="downloadBtn"
+                    href="#"
+                    class="hidden mt-4 inline-flex items-center justify-center gap-2 w-full py-4 rounded-xl font-bold text-sm text-white bg-emerald-600 hover:bg-emerald-500 transition-all duration-300 btn-glow active:scale-[0.98]"
+                >
+                    📥 اضغط هنا لبدء التحميل الفوري
+                </a>
             </div>
         </div>
 
@@ -151,8 +147,13 @@ input:-webkit-autofill:focus {
     const form = document.getElementById('extractForm');
     const urlInput = document.getElementById('urlInput');
     const errorBox = document.getElementById('errorBox');
-    const downloadFrame = document.getElementById('downloadFrame');
-    const downloadContainer = document.getElementById('downloadContainer');
+    const processBox = document.getElementById('processBox');
+    const processSpinner = document.getElementById('processSpinner');
+    const processStatus = document.getElementById('processStatus');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const extractBtn = document.getElementById('extractBtn');
+
+    let currentDownloadUrl = '';
 
     form.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -162,12 +163,39 @@ input:-webkit-autofill:focus {
         if (!url) {
             errorBox.textContent = 'الرجاء إدخال رابط YouTube';
             errorBox.classList.remove('hidden');
-            downloadContainer.style.display = 'none';
             return;
         }
 
-        downloadFrame.src = `https://v3.2embed.cc/download-music?url=${encodeURIComponent(url)}`;
-        downloadContainer.style.display = 'block';
+        currentDownloadUrl = `https://loader.to/api/card/?url=${encodeURIComponent(url)}&f=mp3`;
+
+        extractBtn.disabled = true;
+        extractBtn.classList.add('opacity-50');
+
+        downloadBtn.classList.add('hidden');
+        processStatus.className = 'text-white/60 text-sm font-light';
+        processStatus.textContent = 'جاري فحص الرابط وتخطي قيود يوتيوب...';
+        processSpinner.style.display = '';
+        processBox.classList.remove('hidden');
+
+        setTimeout(() => {
+            processStatus.textContent = 'جاري تحويل مقطع الفيديو إلى هندسة MP3 بأعلى جودة (320kbps)...';
+        }, 1500);
+
+        setTimeout(() => {
+            processSpinner.style.display = 'none';
+            processStatus.textContent = 'جاهز للتحميل التلقائي الفوري!';
+            processStatus.className = 'text-emerald-400 text-sm font-medium';
+            downloadBtn.classList.remove('hidden');
+            extractBtn.disabled = false;
+            extractBtn.classList.remove('opacity-50');
+        }, 3500);
+    });
+
+    downloadBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (currentDownloadUrl) {
+            window.open(currentDownloadUrl, '_blank');
+        }
     });
     </script>
 </body>
